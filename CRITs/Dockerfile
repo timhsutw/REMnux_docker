@@ -40,6 +40,7 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 7F0CEB10 && \
   libxml2-dev \
   libxslt1-dev \
   libyaml-dev \
+  libjpeg8-dev \
   mongodb-org \
   numactl \
   p7zip-full \
@@ -57,6 +58,9 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 7F0CEB10 && \
   libapache2-mod-wsgi && \
   cp /etc/supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf && \
   ldconfig
+
+RUN cd /usr/include/openssl/ && \
+    ln -s ../x86_64-linux-gnu/openssl/opensslconf.h .
 
 # Setup supervisord to manage apache and mongod
 RUN sed -i 's/^\[supervisord\]$/&\nnodaemon\=true\nlogfile\=\/data\/log\/supervisord\.log\npidfile\=\/data\/run\/supervisord\.pid\n\n\[program\:apache2\]\ncommand\=\/bin\/bash\ \-c\ \"source \/etc\/apache2\/envvars\ \&\&\ exec\ \/usr\/sbin\/apache2\ \-DFOREGROUND\"\nuser\=nonroot\nstdout\_logfile\=\/data\/log\/supervisor\/\%\(program\_name\)s\.log\nstderr\_logfile\=\/data\/log\/supervisor\/\%\(program\_name\)s\.log\nautostart\=true\nautorestart\=true\n\n\[program\:mongod\]\ncommand\=\/usr\/bin\/mongod\nstdout\_logfile\=\/data\/log\/supervisor\/\%\(program\_name\)s\.log\nstderr\_logfile\=\/data\/log\/supervisor\/\%\(program\_name\)s\.log\nautostart\=true\nautorestart\=true\n/' /etc/supervisor/conf.d/supervisord.conf
@@ -140,6 +144,8 @@ RUN cd /tmp && \
   sed -i 's/\$CWD/\/data\/log\//' /etc/supervisor/supervisord.conf && \
   sed -i 's/\$CWD/\/data\/log\//' /etc/supervisor/conf.d/supervisord.conf 
 
+RUN pip uninstall -y m2crypto && \
+  apt-get install python-m2crypto
 RUN ldconfig && \
   apt-get remove -y --purge build-essential libtool && \
   apt-get autoremove -y --purge && \
